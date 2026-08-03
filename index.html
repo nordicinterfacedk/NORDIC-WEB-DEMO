@@ -31,7 +31,6 @@
   button{font-family:inherit; cursor:pointer;}
   input,textarea,select{font-family:inherit;}
 
-  /* signature motif — thin gradient line at the top edge of panels */
   .fjord-edge{position:relative;}
   .fjord-edge::before{
     content:""; position:absolute; top:0; left:0; right:0; height:1px;
@@ -48,6 +47,7 @@
   }
   .btn-primary{background:var(--fjord); color:#0B0D0F;}
   .btn-primary:hover{background:var(--fjord-soft);}
+  .btn-primary:disabled{opacity:.5; cursor:default;}
   .btn-ghost{background:var(--elevated); color:var(--muted); border-color:var(--border);}
   .btn-ghost:hover{color:var(--ink); border-color:var(--border-hover);}
   .btn-danger{background:rgba(240,112,138,0.1); color:var(--rose); border-color:rgba(240,112,138,0.2);}
@@ -62,21 +62,24 @@
   input::placeholder, textarea::placeholder{color:var(--faint);}
   label{font-size:12px; color:var(--muted); font-weight:500; display:block; margin-bottom:6px;}
 
-  /* ---------- LOGIN ---------- */
-  #login-screen{
-    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
-  }
-  .login-box{width:100%; max-width:380px;}
-  .brand{display:flex; flex-direction:column; align-items:center; gap:12px; margin-bottom:36px; text-align:center;}
+  /* ---------- FULL-SCREEN GATE SCREENS (cloud setup / login) ---------- */
+  .gate-screen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .gate-box{width:100%; max-width:420px;}
+  .brand{display:flex; flex-direction:column; align-items:center; gap:12px; margin-bottom:32px; text-align:center;}
   .brand-mark{width:36px; height:36px; border-radius:8px; background:var(--elevated); border:1px solid var(--border);
     display:flex; align-items:center; justify-content:center; font-weight:800; color:var(--fjord); font-size:13px;}
   .brand h1{font-size:17px; font-weight:700; margin:0;}
   .brand p{font-size:13px; color:var(--muted); margin:4px 0 0;}
-  .login-form{padding:24px;}
-  .login-form .field{margin-bottom:16px;}
+  .gate-form{padding:24px;}
+  .gate-form .field{margin-bottom:16px;}
   .error-msg{font-size:13px; color:var(--rose); background:rgba(240,112,138,0.1); border:1px solid rgba(240,112,138,0.2);
     border-radius:8px; padding:8px 12px; margin-bottom:14px;}
-  .login-note{text-align:center; font-size:12px; color:var(--faint); margin-top:20px;}
+  .info-msg{font-size:12px; color:var(--muted); background:var(--elevated); border:1px solid var(--border);
+    border-radius:8px; padding:10px 12px; margin-bottom:14px; line-height:1.5;}
+  .info-msg a{color:var(--fjord);}
+  .gate-note{text-align:center; font-size:12px; color:var(--faint); margin-top:20px; line-height:1.6;}
+  .bin-id-display{font-family:'JetBrains Mono',monospace; font-size:12px; background:var(--base); border:1px solid var(--border);
+    border-radius:8px; padding:8px 10px; word-break:break-all; color:var(--mint); margin-bottom:14px;}
 
   /* ---------- APP SHELL ---------- */
   #app{display:none; min-height:100vh;}
@@ -97,11 +100,18 @@
   .nav-item.active{background:var(--elevated); color:var(--ink); border-color:var(--border);}
   .nav-item .dot{font-size:11px; color:var(--faint);}
   .nav-item.active .dot{color:var(--fjord);}
-  .sidebar-footer{padding:16px 12px; border-top:1px solid var(--border);}
-  .sidebar-footer .user{padding:0 12px; font-size:12px; color:var(--faint); margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .logout-btn{width:100%; text-align:left; background:none; border:none; padding:8px 12px; border-radius:8px;
+  .sidebar-footer{padding:14px 12px; border-top:1px solid var(--border);}
+  .sync-status{display:flex; align-items:center; gap:6px; padding:6px 12px; font-size:11px; color:var(--faint); margin-bottom:6px;}
+  .sync-dot{width:6px; height:6px; border-radius:50%; background:var(--faint); flex-shrink:0;}
+  .sync-status.syncing .sync-dot{background:var(--amber); animation:pulse 1s infinite;}
+  .sync-status.synced .sync-dot{background:var(--mint);}
+  .sync-status.error .sync-dot{background:var(--rose);}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.3;}}
+  .user{padding:0 12px; font-size:12px; color:var(--faint); margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .footer-btn{width:100%; text-align:left; background:none; border:none; padding:7px 12px; border-radius:8px;
     font-size:13px; color:var(--muted);}
-  .logout-btn:hover{color:var(--rose); background:rgba(255,255,255,0.02);}
+  .footer-btn:hover{color:var(--ink); background:rgba(255,255,255,0.02);}
+  .footer-btn.danger:hover{color:var(--rose);}
 
   .main{flex:1; min-width:0; overflow-y:auto;}
   .view{display:none; padding:32px; max-width:1200px;}
@@ -110,7 +120,6 @@
   .view-header h1{font-size:22px; font-weight:800; margin:0;}
   .view-header p{font-size:13px; color:var(--muted); margin:4px 0 0;}
 
-  /* stat cards */
   .stat-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; margin-bottom:28px;}
   @media (max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr);}}
   .stat-card{padding:18px;}
@@ -128,7 +137,6 @@
   .list-row:last-child{border-bottom:none;}
   .empty-row{padding:20px; text-align:center; color:var(--faint); font-size:13px;}
 
-  /* table */
   table{width:100%; border-collapse:collapse; font-size:13px;}
   thead th{text-align:left; padding:11px 20px; font-size:11px; color:var(--faint); text-transform:uppercase;
     letter-spacing:.04em; font-weight:600; border-bottom:1px solid var(--border);}
@@ -137,6 +145,9 @@
   tbody tr:hover{background:rgba(255,255,255,0.015);}
   .row-link{color:var(--ink); font-weight:500; background:none; border:none; padding:0; font-size:13px; text-align:left;}
   .row-link:hover{color:var(--fjord);}
+  .row-action{background:none; border:none; font-size:12px; padding:0; margin-left:14px;}
+  .row-action.edit{color:var(--muted);} .row-action.edit:hover{color:var(--ink);}
+  .row-action.delete{color:var(--rose);}
 
   .badge{display:inline-block; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:600;}
   .badge-lead{background:var(--elevated); color:var(--muted);}
@@ -146,7 +157,6 @@
   .badge-completed{background:rgba(94,168,255,0.1); color:var(--fjord-soft);}
   .badge-past{background:var(--elevated); color:var(--faint);}
 
-  /* kanban */
   .kanban{display:grid; grid-template-columns:repeat(5,1fr); gap:14px; align-items:start; overflow-x:auto;}
   @media (max-width:1100px){.kanban{grid-template-columns:repeat(5,220px);}}
   .kanban-col-head{display:flex; align-items:center; justify-content:space-between; padding:0 2px; margin-bottom:10px;}
@@ -155,25 +165,25 @@
   .kanban-card{padding:14px; margin-bottom:8px; cursor:grab;}
   .kanban-card:active{cursor:grabbing;}
   .kanban-card.dragging{opacity:.4;}
+  .kanban-card-top{display:flex; align-items:flex-start; justify-content:space-between; gap:6px;}
   .kanban-card h4{font-size:13px; font-weight:600; margin:0 0 3px;}
   .kanban-card .client-name{font-size:11px; color:var(--faint); margin-bottom:10px;}
+  .kanban-del{background:none; border:none; color:var(--faint); font-size:12px; line-height:1; padding:2px; flex-shrink:0;}
+  .kanban-del:hover{color:var(--rose);}
   .progress-track{height:4px; background:var(--elevated); border-radius:4px; overflow:hidden; margin-bottom:8px;}
   .progress-fill{height:100%; background:var(--fjord); border-radius:4px;}
   .kanban-meta{display:flex; align-items:center; justify-content:space-between; font-size:11px; color:var(--faint);}
-  .kanban-drop{border:1px dashed var(--border); border-radius:var(--radius); padding:16px; text-align:center; font-size:11px; color:var(--faint); min-height:40px;}
+  .kanban-drop{border:1px dashed var(--border); border-radius:var(--radius); padding:16px; text-align:center; font-size:11px; color:var(--faint); min-height:20px; margin-top:4px;}
   .kanban-col.dragover .kanban-drop{border-color:var(--fjord); color:var(--fjord);}
 
-  /* modal */
   .modal-backdrop{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:50; align-items:center; justify-content:center; padding:20px;}
   .modal-backdrop.active{display:flex;}
   .modal{width:100%; max-width:460px; max-height:88vh; overflow-y:auto; padding:22px;}
   .modal h2{font-size:16px; font-weight:700; margin:0 0 18px;}
   .field{margin-bottom:14px;}
   .field-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-  .modal-actions{display:flex; gap:8px; margin-top:20px; justify-content:flex-end;}
-
-  .icon-btn{background:none; border:none; color:var(--faint); font-size:13px; padding:4px 8px; border-radius:6px;}
-  .icon-btn:hover{color:var(--rose); background:rgba(240,112,138,0.08);}
+  .modal-actions{display:flex; gap:8px; margin-top:20px; justify-content:space-between;}
+  .modal-actions-right{display:flex; gap:8px;}
 
   .back-link{font-size:12px; color:var(--muted); background:none; border:none; padding:0; margin-bottom:16px; display:flex; align-items:center; gap:4px;}
   .back-link:hover{color:var(--fjord);}
@@ -188,9 +198,44 @@
 </head>
 <body>
 
+<!-- ============ CLOUD SETUP (shown once per device) ============ -->
+<div id="cloud-setup-screen" class="gate-screen">
+  <div class="gate-box">
+    <div class="brand">
+      <div class="brand-mark">NI</div>
+      <div>
+        <h1>Nordic Interface OS</h1>
+        <p>Forbind til jeres cloud-lager</p>
+      </div>
+    </div>
+    <form id="cloud-setup-form" class="panel fjord-edge gate-form">
+      <div class="info-msg">
+        Data gemmes i en gratis <a href="https://jsonbin.io" target="_blank" rel="noopener">JSONBin.io</a>-konto,
+        så det samme system virker fra enhver computer eller telefon. Opret en gratis konto, kopiér din
+        <strong>X-Master-Key</strong> ind herunder, og opret en ny bin første gang.
+      </div>
+      <div id="cloud-setup-error"></div>
+      <div class="field">
+        <label for="setup-api-key">JSONBin.io Master Key</label>
+        <input type="text" id="setup-api-key" placeholder="$2a$10$..." required />
+      </div>
+      <div class="field" id="bin-id-field">
+        <label for="setup-bin-id">Bin ID (lad stå tomt for at oprette en ny)</label>
+        <input type="text" id="setup-bin-id" placeholder="tom = opret ny bin" />
+      </div>
+      <div id="new-bin-display"></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;" id="cloud-setup-submit">Forbind</button>
+    </form>
+    <p class="gate-note">
+      Første gang på en ny enhed: indtast samme Master Key og Bin ID som de andre enheder bruger,
+      så alle deler det samme data.
+    </p>
+  </div>
+</div>
+
 <!-- ============ LOGIN ============ -->
-<div id="login-screen">
-  <div class="login-box">
+<div id="login-screen" class="gate-screen" style="display:none;">
+  <div class="gate-box">
     <div class="brand">
       <div class="brand-mark">NI</div>
       <div>
@@ -198,7 +243,7 @@
         <p>Internt system — kun for teamet</p>
       </div>
     </div>
-    <form id="login-form" class="panel fjord-edge login-form">
+    <form id="login-form" class="panel fjord-edge gate-form">
       <div id="login-error"></div>
       <div class="field">
         <label for="login-user">Brugernavn</label>
@@ -210,7 +255,7 @@
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%;">Log ind</button>
     </form>
-    <p class="login-note">Standard: admin / nordicwebdesign — skift adgangskoden under Indstillinger efter første login.</p>
+    <p class="gate-note" id="login-note">Standard: admin / nordicwebdesign — skift adgangskoden under Indstillinger.</p>
   </div>
 </div>
 
@@ -227,22 +272,19 @@
       <div class="nav-item" data-view="projects"><span class="dot">▣</span> Projekter</div>
     </nav>
     <div class="sidebar-footer">
+      <div class="sync-status" id="sync-status"><span class="sync-dot"></span><span id="sync-status-text">Synkroniseret</span></div>
       <div class="user" id="current-user">admin</div>
-      <button class="logout-btn" id="logout-btn">Log ud</button>
+      <button class="footer-btn" id="settings-btn">Indstillinger</button>
+      <button class="footer-btn danger" id="logout-btn">Log ud</button>
     </div>
   </aside>
 
   <main class="main">
 
-    <!-- ---------- DASHBOARD ---------- -->
     <section class="view active" id="view-dashboard">
       <div class="view-header">
-        <div>
-          <h1>Oversigt</h1>
-          <p>Status på Nordic Interface lige nu.</p>
-        </div>
+        <div><h1>Oversigt</h1><p>Status på Nordic Interface lige nu.</p></div>
       </div>
-
       <div class="stat-grid">
         <div class="panel fjord-edge stat-card">
           <div class="stat-label"><span class="stat-dot" style="background:var(--mint);"></span><span>Omsætning denne måned</span></div>
@@ -263,7 +305,6 @@
           <div class="stat-sub" id="stat-unpaid-sub"></div>
         </div>
       </div>
-
       <div class="two-col">
         <div class="panel fjord-edge">
           <div class="panel-header"><h2>Kommende deadlines</h2></div>
@@ -276,13 +317,9 @@
       </div>
     </section>
 
-    <!-- ---------- CLIENTS LIST ---------- -->
     <section class="view" id="view-clients">
       <div class="view-header">
-        <div>
-          <h1>Kunder</h1>
-          <p id="clients-count">0 kunder i alt</p>
-        </div>
+        <div><h1>Kunder</h1><p id="clients-count">0 kunder i alt</p></div>
         <button class="btn btn-primary" id="new-client-btn">+ Ny kunde</button>
       </div>
       <div class="panel fjord-edge" style="overflow:hidden;">
@@ -293,14 +330,10 @@
       </div>
     </section>
 
-    <!-- ---------- CLIENT DETAIL ---------- -->
     <section class="view" id="view-client-detail">
       <button class="back-link" id="back-to-clients">← Tilbage til kunder</button>
       <div class="view-header">
-        <div>
-          <h1 id="detail-client-name"></h1>
-          <p id="detail-client-company"></p>
-        </div>
+        <div><h1 id="detail-client-name"></h1><p id="detail-client-company"></p></div>
         <div style="display:flex; gap:8px;">
           <button class="btn btn-ghost" id="edit-client-btn">Rediger</button>
           <button class="btn btn-danger" id="delete-client-btn">Slet</button>
@@ -320,13 +353,9 @@
       </div>
     </section>
 
-    <!-- ---------- PROJECTS KANBAN ---------- -->
     <section class="view" id="view-projects">
       <div class="view-header">
-        <div>
-          <h1>Projekter</h1>
-          <p id="projects-count">0 projekter i alt</p>
-        </div>
+        <div><h1>Projekter</h1><p id="projects-count">0 projekter i alt</p></div>
         <button class="btn btn-primary" id="new-project-btn">+ Nyt projekt</button>
       </div>
       <div class="kanban" id="kanban-board"></div>
@@ -345,12 +374,9 @@
       <div class="field"><label>Firma</label><input type="text" id="client-company" /></div>
       <div class="field"><label>Status</label>
         <select id="client-status">
-          <option value="lead">Lead</option>
-          <option value="contacted">Kontaktet</option>
-          <option value="offer_sent">Tilbud sendt</option>
-          <option value="active">Aktiv kunde</option>
-          <option value="completed">Færdig</option>
-          <option value="past">Tidligere kunde</option>
+          <option value="lead">Lead</option><option value="contacted">Kontaktet</option>
+          <option value="offer_sent">Tilbud sendt</option><option value="active">Aktiv kunde</option>
+          <option value="completed">Færdig</option><option value="past">Tidligere kunde</option>
         </select>
       </div>
     </div>
@@ -362,8 +388,11 @@
     <div class="field"><label>Website</label><input type="text" id="client-website" /></div>
     <div class="field"><label>Noter</label><textarea id="client-notes" rows="3"></textarea></div>
     <div class="modal-actions">
-      <button type="button" class="btn btn-ghost" data-close="client">Annuller</button>
-      <button type="submit" class="btn btn-primary">Gem</button>
+      <button type="button" class="btn btn-danger" id="client-delete-btn" style="display:none;">Slet</button>
+      <div class="modal-actions-right">
+        <button type="button" class="btn btn-ghost" data-close="client">Annuller</button>
+        <button type="submit" class="btn btn-primary">Gem</button>
+      </div>
     </div>
   </form>
 </div>
@@ -381,106 +410,195 @@
     <div class="field-row">
       <div class="field"><label>Stadie</label>
         <select id="project-stage">
-          <option value="lead">Lead</option>
-          <option value="design">Design</option>
-          <option value="development">Udvikling</option>
-          <option value="review">Review</option>
+          <option value="lead">Lead</option><option value="design">Design</option>
+          <option value="development">Udvikling</option><option value="review">Review</option>
           <option value="delivered">Leveret</option>
         </select>
       </div>
       <div class="field"><label>Fremgang (%)</label><input type="number" id="project-progress" min="0" max="100" value="0" /></div>
     </div>
     <div class="modal-actions">
-      <button type="button" class="btn btn-ghost" data-close="project">Annuller</button>
-      <button type="submit" class="btn btn-primary">Gem</button>
+      <button type="button" class="btn btn-danger" id="project-delete-btn" style="display:none;">Slet</button>
+      <div class="modal-actions-right">
+        <button type="button" class="btn btn-ghost" data-close="project">Annuller</button>
+        <button type="submit" class="btn btn-primary">Gem</button>
+      </div>
     </div>
   </form>
+</div>
+
+<div class="modal-backdrop" id="settings-modal-backdrop">
+  <div class="panel fjord-edge modal">
+    <h2>Indstillinger</h2>
+    <div class="field"><label>Brugernavn</label><input type="text" id="settings-username" /></div>
+    <div class="field"><label>Ny adgangskode (lad stå tomt for at beholde nuværende)</label><input type="password" id="settings-password" /></div>
+    <div class="field">
+      <label>Cloud Bin ID (del denne med andre enheder)</label>
+      <div class="bin-id-display" id="settings-bin-id"></div>
+    </div>
+    <div class="modal-actions">
+      <div></div>
+      <div class="modal-actions-right">
+        <button type="button" class="btn btn-ghost" data-close="settings">Luk</button>
+        <button type="button" class="btn btn-primary" id="settings-save-btn">Gem</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 (function(){
   "use strict";
 
-  // ---------------- STORAGE KEYS ----------------
-  const K_AUTH = "nios_auth";
-  const K_CLIENTS = "nios_clients";
-  const K_PROJECTS = "nios_projects";
-  const K_INVOICES = "nios_invoices";
-  const K_ACTIVITY = "nios_activity";
+  // ================= CLOUD (JSONBin.io) =================
+  const K_CLOUD_CREDS = "nios_cloud_creds"; // {apiKey, binId} — only the connection info, stored per device
+  const JSONBIN_BASE = "https://api.jsonbin.io/v3/b";
 
-  const STATUS_LABEL = {lead:"Lead", contacted:"Kontaktet", offer_sent:"Tilbud sendt", active:"Aktiv kunde", completed:"Færdig", past:"Tidligere kunde"};
-  const STAGE_LABEL = {lead:"Lead", design:"Design", development:"Udvikling", review:"Review", delivered:"Leveret"};
-  const STAGES = ["lead","design","development","review","delivered"];
+  let CLOUD = null;       // {apiKey, binId}
+  let STATE = null;       // {auth, clients, projects, invoices, activity}
+  let pushTimer = null;
 
-  // ---------------- UTIL ----------------
-  function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
-  function fmtDKK(n){ return new Intl.NumberFormat("da-DK",{maximumFractionDigits:0}).format(n||0) + " kr"; }
-  function load(key, fallback){ try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }catch(e){ return fallback; } }
-  function save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+  function defaultState(){
+    return { auth: null, clients: [], projects: [], invoices: [], activity: [] };
+  }
 
-  // very lightweight client-side hash for the local access gate — NOT real
-  // security. This file has no server, so anyone with it can read the
-  // source or the browser's localStorage and bypass this. It's a
-  // convenience lock for a single local user, not access control.
   async function hash(str){
     const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
     return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
   }
 
-  // ---------------- SEED DATA (first run only) ----------------
-  function seedIfEmpty(){
-    if (load(K_CLIENTS, null)) return;
-    const c1 = uid(), c2 = uid(), c3 = uid();
-    save(K_CLIENTS, [
-      {id:c1, name:"Mikkel Holm", company:"Holm Byggeservice", email:"mikkel@holmbygge.dk", phone:"", address:"", website:"", status:"active", notes:""},
-      {id:c2, name:"Sofie Lund", company:"Lund Interiør", email:"sofie@lundinterior.dk", phone:"", address:"", website:"", status:"offer_sent", notes:""},
-      {id:c3, name:"Jonas Berg", company:"Berg Advokater", email:"jonas@bergadvokater.dk", phone:"", address:"", website:"", status:"lead", notes:""},
-    ]);
-    const p1 = uid();
-    save(K_PROJECTS, [
-      {id:p1, clientId:c1, name:"Ny hjemmeside", price:18000, deadline:"", stage:"development", status:"active", progress:60, notes:""},
-      {id:uid(), clientId:c2, name:"Webshop redesign", price:32000, deadline:"", stage:"design", status:"active", progress:20, notes:""},
-    ]);
-    save(K_INVOICES, [
-      {id:uid(), clientId:c1, projectId:p1, invoiceNumber:"2026-014", amount:9000, status:"paid", paidAt: new Date().toISOString().slice(0,10)},
-      {id:uid(), clientId:c2, invoiceNumber:"2026-015", amount:16000, status:"sent"},
-    ]);
-    save(K_ACTIVITY, [
-      {id:uid(), summary:"Demo-data indlæst — rediger eller slet frit.", createdAt: new Date().toISOString()},
-    ]);
+  async function cloudCreateBin(apiKey, initial){
+    const res = await fetch(JSONBIN_BASE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Master-Key": apiKey, "X-Bin-Name": "nordic-interface-os" },
+      body: JSON.stringify(initial),
+    });
+    if (!res.ok) throw new Error("Kunne ikke oprette bin (tjek din Master Key).");
+    const data = await res.json();
+    return data.metadata.id;
   }
 
-  // ---------------- AUTH ----------------
-  async function ensureDefaultAuth(){
-    const auth = load(K_AUTH, null);
-    if (!auth){
-      save(K_AUTH, {username:"admin", passHash: await hash("nordicwebdesign")});
+  async function cloudRead(){
+    const res = await fetch(JSONBIN_BASE + "/" + CLOUD.binId + "/latest", {
+      headers: { "X-Master-Key": CLOUD.apiKey },
+    });
+    if (!res.ok) throw new Error("Kunne ikke hente data fra cloud (tjek Master Key og Bin ID).");
+    const data = await res.json();
+    return data.record;
+  }
+
+  async function cloudWrite(state){
+    const res = await fetch(JSONBIN_BASE + "/" + CLOUD.binId, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "X-Master-Key": CLOUD.apiKey },
+      body: JSON.stringify(state),
+    });
+    if (!res.ok) throw new Error("Kunne ikke gemme til cloud.");
+    return res.json();
+  }
+
+  function setSyncStatus(kind, text){
+    const el = document.getElementById("sync-status");
+    el.className = "sync-status " + kind;
+    document.getElementById("sync-status-text").textContent = text;
+  }
+
+  // Debounced push: local UI updates instantly, cloud write follows shortly after.
+  function schedulePush(){
+    setSyncStatus("syncing", "Synkroniserer…");
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(async ()=>{
+      try{
+        await cloudWrite(STATE);
+        setSyncStatus("synced", "Synkroniseret");
+      }catch(e){
+        setSyncStatus("error", "Synkronisering fejlede");
+      }
+    }, 500);
+  }
+
+  function loadCreds(){ try{ return JSON.parse(localStorage.getItem(K_CLOUD_CREDS)); }catch(e){ return null; } }
+  function saveCreds(c){ localStorage.setItem(K_CLOUD_CREDS, JSON.stringify(c)); }
+
+  // ================= UTIL =================
+  function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+  function fmtDKK(n){ return new Intl.NumberFormat("da-DK",{maximumFractionDigits:0}).format(n||0) + " kr"; }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+
+  const STATUS_LABEL = {lead:"Lead", contacted:"Kontaktet", offer_sent:"Tilbud sendt", active:"Aktiv kunde", completed:"Færdig", past:"Tidligere kunde"};
+  const STAGE_LABEL = {lead:"Lead", design:"Design", development:"Udvikling", review:"Review", delivered:"Leveret"};
+  const STAGES = ["lead","design","development","review","delivered"];
+
+  function logActivity(summary){
+    STATE.activity.unshift({id:uid(), summary, createdAt:new Date().toISOString()});
+    STATE.activity = STATE.activity.slice(0,20);
+  }
+
+  function persist(){ schedulePush(); renderAll(); }
+
+  // ================= CLOUD SETUP SCREEN =================
+  const cloudSetupScreen = document.getElementById("cloud-setup-screen");
+  const loginScreen = document.getElementById("login-screen");
+  const binIdField = document.getElementById("setup-bin-id");
+  const newBinDisplay = document.getElementById("new-bin-display");
+
+  document.getElementById("cloud-setup-form").addEventListener("submit", async function(e){
+    e.preventDefault();
+    const errEl = document.getElementById("cloud-setup-error");
+    const submitBtn = document.getElementById("cloud-setup-submit");
+    errEl.innerHTML = "";
+    const apiKey = document.getElementById("setup-api-key").value.trim();
+    let binId = document.getElementById("setup-bin-id").value.trim();
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Forbinder…";
+    try{
+      if (!binId){
+        const seed = defaultState();
+        seed.auth = { username: "admin", passHash: await hash("nordicwebdesign") };
+        binId = await cloudCreateBin(apiKey, seed);
+        newBinDisplay.innerHTML = '<div class="bin-id-display">Din nye Bin ID: ' + esc(binId) + '</div>'
+          + '<div class="info-msg">Gem dette Bin ID — du skal bruge det samme (sammen med Master Key) på jeres andre enheder.</div>';
+      }
+      CLOUD = { apiKey, binId };
+      const record = await cloudRead();
+      STATE = Object.assign(defaultState(), record);
+      if (!STATE.auth){
+        STATE.auth = { username: "admin", passHash: await hash("nordicwebdesign") };
+        await cloudWrite(STATE);
+      }
+      saveCreds(CLOUD);
+      cloudSetupScreen.style.display = "none";
+      loginScreen.style.display = "flex";
+    }catch(err){
+      errEl.innerHTML = '<div class="error-msg">' + esc(err.message) + '</div>';
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Forbind";
     }
-  }
+  });
 
+  // ================= LOGIN =================
   function isLoggedIn(){ return sessionStorage.getItem("nios_session") === "1"; }
   function setLoggedIn(v){ if(v) sessionStorage.setItem("nios_session","1"); else sessionStorage.removeItem("nios_session"); }
 
   function showApp(){
-    document.getElementById("login-screen").style.display = "none";
+    loginScreen.style.display = "none";
     const app = document.getElementById("app");
     app.classList.add("active");
-    document.getElementById("current-user").textContent = load(K_AUTH,{}).username || "admin";
+    document.getElementById("current-user").textContent = STATE.auth.username;
     renderAll();
   }
   function showLogin(){
     document.getElementById("app").classList.remove("active");
-    document.getElementById("login-screen").style.display = "flex";
+    loginScreen.style.display = "flex";
   }
 
   document.getElementById("login-form").addEventListener("submit", async function(e){
     e.preventDefault();
     const user = document.getElementById("login-user").value.trim();
     const pass = document.getElementById("login-pass").value;
-    const auth = load(K_AUTH, {});
     const errEl = document.getElementById("login-error");
     const candidateHash = await hash(pass);
-    if (user === auth.username && candidateHash === auth.passHash){
+    if (user === STATE.auth.username && candidateHash === STATE.auth.passHash){
       errEl.innerHTML = "";
       setLoggedIn(true);
       showApp();
@@ -494,7 +612,26 @@
     showLogin();
   });
 
-  // ---------------- NAVIGATION ----------------
+  // ================= SETTINGS =================
+  const settingsBackdrop = document.getElementById("settings-modal-backdrop");
+  document.getElementById("settings-btn").addEventListener("click", ()=>{
+    document.getElementById("settings-username").value = STATE.auth.username;
+    document.getElementById("settings-password").value = "";
+    document.getElementById("settings-bin-id").textContent = CLOUD.binId;
+    settingsBackdrop.classList.add("active");
+  });
+  settingsBackdrop.querySelector('[data-close="settings"]').addEventListener("click", ()=>settingsBackdrop.classList.remove("active"));
+  document.getElementById("settings-save-btn").addEventListener("click", async ()=>{
+    const newUser = document.getElementById("settings-username").value.trim();
+    const newPass = document.getElementById("settings-password").value;
+    if (newUser) STATE.auth.username = newUser;
+    if (newPass) STATE.auth.passHash = await hash(newPass);
+    document.getElementById("current-user").textContent = STATE.auth.username;
+    settingsBackdrop.classList.remove("active");
+    persist();
+  });
+
+  // ================= NAVIGATION =================
   function switchView(name){
     document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
     document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
@@ -507,20 +644,9 @@
     item.addEventListener("click", ()=>{ switchView(item.dataset.view); renderAll(); });
   });
 
-  // ---------------- ACTIVITY LOG ----------------
-  function logActivity(summary){
-    const log = load(K_ACTIVITY, []);
-    log.unshift({id:uid(), summary, createdAt:new Date().toISOString()});
-    save(K_ACTIVITY, log.slice(0,20));
-  }
-
-  // ---------------- RENDER: DASHBOARD ----------------
+  // ================= RENDER: DASHBOARD =================
   function renderDashboard(){
-    const clients = load(K_CLIENTS, []);
-    const projects = load(K_PROJECTS, []);
-    const invoices = load(K_INVOICES, []);
-    const activity = load(K_ACTIVITY, []);
-
+    const { clients, projects, invoices, activity } = STATE;
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -539,23 +665,21 @@
     document.getElementById("stat-unpaid-sub").textContent = unpaid.length + " fakturaer";
 
     const upcoming = projects.filter(p=>p.deadline).sort((a,b)=>a.deadline.localeCompare(b.deadline)).slice(0,5);
-    const deadlinesEl = document.getElementById("upcoming-deadlines");
-    deadlinesEl.innerHTML = upcoming.length ? upcoming.map(p=>{
+    document.getElementById("upcoming-deadlines").innerHTML = upcoming.length ? upcoming.map(p=>{
       const client = clients.find(c=>c.id===p.clientId);
       return '<div class="list-row"><div><div style="color:var(--ink);">'+esc(p.name)+'</div>'
         + '<div style="color:var(--faint); font-size:11px;">'+esc(client?client.name:"")+'</div></div>'
         + '<span class="mono" style="color:var(--muted); font-size:11px;">'+esc(p.deadline)+'</span></div>';
     }).join("") : '<div class="empty-row">Ingen deadlines i horisonten.</div>';
 
-    const activityEl = document.getElementById("recent-activity");
-    activityEl.innerHTML = activity.length ? activity.slice(0,6).map(a=>
+    document.getElementById("recent-activity").innerHTML = activity.length ? activity.slice(0,6).map(a=>
       '<div class="list-row" style="color:var(--muted);">'+esc(a.summary)+'</div>'
     ).join("") : '<div class="empty-row">Ingen aktivitet endnu.</div>';
   }
 
-  // ---------------- RENDER: CLIENTS ----------------
+  // ================= RENDER: CLIENTS =================
   function renderClients(){
-    const clients = load(K_CLIENTS, []);
+    const clients = STATE.clients;
     document.getElementById("clients-count").textContent = clients.length + " kunder i alt";
     const body = document.getElementById("clients-table-body");
     body.innerHTML = clients.length ? clients.map(c=>
@@ -564,18 +688,31 @@
       + '<td style="color:var(--muted);">'+esc(c.company||"—")+'</td>'
       + '<td style="color:var(--muted);">'+esc(c.email||"—")+'</td>'
       + '<td><span class="badge badge-'+c.status+'">'+STATUS_LABEL[c.status]+'</span></td>'
-      + '<td></td>'
+      + '<td style="text-align:right; white-space:nowrap;">'
+        + '<button class="row-action edit" data-edit-client="'+c.id+'">Rediger</button>'
+        + '<button class="row-action delete" data-delete-client="'+c.id+'">Slet</button>'
+      + '</td>'
       + '</tr>'
     ).join("") : '<tr><td colspan="5" class="empty-row">Ingen kunder endnu. Opret den første kunde for at komme i gang.</td></tr>';
 
-    body.querySelectorAll("[data-open-client]").forEach(btn=>{
-      btn.addEventListener("click", ()=>openClientDetail(btn.dataset.openClient));
-    });
+    body.querySelectorAll("[data-open-client]").forEach(btn=>btn.addEventListener("click", ()=>openClientDetail(btn.dataset.openClient)));
+    body.querySelectorAll("[data-edit-client]").forEach(btn=>btn.addEventListener("click", ()=>openClientModal(btn.dataset.editClient)));
+    body.querySelectorAll("[data-delete-client]").forEach(btn=>btn.addEventListener("click", ()=>{
+      const c = clients.find(x=>x.id===btn.dataset.deleteClient);
+      if (c) deleteClient(c.id, c.name);
+    }));
+  }
+
+  function deleteClient(id, name){
+    if (!confirm('Slet "'+name+'"? Dette kan ikke fortrydes.')) return;
+    STATE.clients = STATE.clients.filter(c=>c.id!==id);
+    STATE.projects = STATE.projects.filter(p=>p.clientId!==id);
+    logActivity("Kunde slettet: "+name);
+    persist();
   }
 
   function openClientDetail(id){
-    const clients = load(K_CLIENTS, []);
-    const client = clients.find(c=>c.id===id);
+    const client = STATE.clients.find(c=>c.id===id);
     if (!client) return;
     switchView("client-detail");
     document.getElementById("view-client-detail").dataset.clientId = id;
@@ -585,7 +722,7 @@
       ["Email", client.email], ["Telefon", client.phone], ["Adresse", client.address], ["Website", client.website]
     ].map(([k,v])=>'<div class="kv-row"><span class="k">'+k+'</span><span class="v">'+esc(v||"—")+'</span></div>').join("");
 
-    const projects = load(K_PROJECTS, []).filter(p=>p.clientId===id);
+    const projects = STATE.projects.filter(p=>p.clientId===id);
     document.getElementById("detail-projects").innerHTML = projects.length
       ? projects.map(p=>'<div class="kv-row"><span class="v" style="color:var(--ink);">'+esc(p.name)+'</span><span class="k">'+STAGE_LABEL[p.stage]+'</span></div>').join("")
       : '<div class="empty-row" style="padding:10px 0;">Ingen projekter endnu.</div>';
@@ -594,29 +731,28 @@
   }
 
   document.getElementById("back-to-clients").addEventListener("click", ()=>{ switchView("clients"); renderClients(); });
-
   document.getElementById("delete-client-btn").addEventListener("click", ()=>{
     const id = document.getElementById("view-client-detail").dataset.clientId;
-    if (!confirm("Slet denne kunde? Dette kan ikke fortrydes.")) return;
-    let clients = load(K_CLIENTS, []).filter(c=>c.id!==id);
-    save(K_CLIENTS, clients);
-    let projects = load(K_PROJECTS, []).filter(p=>p.clientId!==id);
-    save(K_PROJECTS, projects);
-    logActivity("Kunde slettet");
-    switchView("clients"); renderAll();
+    const c = STATE.clients.find(x=>x.id===id);
+    if (!c) return;
+    if (!confirm('Slet "'+c.name+'"? Dette kan ikke fortrydes.')) return;
+    STATE.clients = STATE.clients.filter(x=>x.id!==id);
+    STATE.projects = STATE.projects.filter(p=>p.clientId!==id);
+    logActivity("Kunde slettet: "+c.name);
+    switchView("clients");
+    persist();
   });
-
   document.getElementById("edit-client-btn").addEventListener("click", ()=>{
-    const id = document.getElementById("view-client-detail").dataset.clientId;
-    openClientModal(id);
+    openClientModal(document.getElementById("view-client-detail").dataset.clientId);
   });
 
-  // ---------------- CLIENT MODAL ----------------
+  // ---- client modal ----
   const clientBackdrop = document.getElementById("client-modal-backdrop");
   function openClientModal(id){
     const isEdit = !!id;
     document.getElementById("client-modal-title").textContent = isEdit ? "Rediger kunde" : "Ny kunde";
-    const c = isEdit ? load(K_CLIENTS,[]).find(x=>x.id===id) : {};
+    document.getElementById("client-delete-btn").style.display = isEdit ? "inline-flex" : "none";
+    const c = isEdit ? STATE.clients.find(x=>x.id===id) : {};
     document.getElementById("client-id").value = id || "";
     document.getElementById("client-name").value = c.name || "";
     document.getElementById("client-company").value = c.company || "";
@@ -631,11 +767,18 @@
   document.getElementById("new-client-btn").addEventListener("click", ()=>openClientModal(null));
   clientBackdrop.querySelector('[data-close="client"]').addEventListener("click", ()=>clientBackdrop.classList.remove("active"));
   clientBackdrop.addEventListener("click", (e)=>{ if(e.target===clientBackdrop) clientBackdrop.classList.remove("active"); });
+  document.getElementById("client-delete-btn").addEventListener("click", ()=>{
+    const id = document.getElementById("client-id").value;
+    const c = STATE.clients.find(x=>x.id===id);
+    if (!c) return;
+    clientBackdrop.classList.remove("active");
+    deleteClient(c.id, c.name);
+    switchView("clients");
+  });
 
   document.getElementById("client-form").addEventListener("submit", (e)=>{
     e.preventDefault();
     const id = document.getElementById("client-id").value;
-    const clients = load(K_CLIENTS, []);
     const data = {
       id: id || uid(),
       name: document.getElementById("client-name").value.trim(),
@@ -648,23 +791,22 @@
       notes: document.getElementById("client-notes").value.trim(),
     };
     if (id){
-      const idx = clients.findIndex(c=>c.id===id);
-      clients[idx] = data;
+      const idx = STATE.clients.findIndex(c=>c.id===id);
+      STATE.clients[idx] = data;
       logActivity('Kunde opdateret: '+data.name);
     } else {
-      clients.unshift(data);
+      STATE.clients.unshift(data);
       logActivity('Ny kunde oprettet: '+data.name);
     }
-    save(K_CLIENTS, clients);
     clientBackdrop.classList.remove("active");
-    renderAll();
-    if (id) openClientDetail(id);
+    persist();
+    if (id && document.getElementById("view-client-detail").classList.contains("active")) openClientDetail(id);
   });
 
-  // ---------------- RENDER: PROJECTS / KANBAN ----------------
+  // ================= RENDER: PROJECTS / KANBAN =================
   function renderProjects(){
-    const projects = load(K_PROJECTS, []);
-    const clients = load(K_CLIENTS, []);
+    const projects = STATE.projects;
+    const clients = STATE.clients;
     document.getElementById("projects-count").textContent = projects.length + " projekter i alt";
 
     const board = document.getElementById("kanban-board");
@@ -672,23 +814,35 @@
       const items = projects.filter(p=>p.stage===stage);
       return '<div class="kanban-col" data-stage="'+stage+'">'
         + '<div class="kanban-col-head"><h3>'+STAGE_LABEL[stage]+'</h3><span class="kanban-count">'+items.length+'</span></div>'
-        + '<div class="kanban-drop-zone" style="min-height:60px;">'
-        + (items.map(p=>{
+        + '<div class="kanban-drop-zone">'
+        + items.map(p=>{
             const client = clients.find(c=>c.id===p.clientId);
             return '<div class="panel fjord-edge kanban-card" draggable="true" data-project-id="'+p.id+'">'
-              + '<h4>'+esc(p.name)+'</h4>'
+              + '<div class="kanban-card-top"><h4>'+esc(p.name)+'</h4>'
+              + '<button class="kanban-del" data-del-project="'+p.id+'" title="Slet">✕</button></div>'
               + '<div class="client-name">'+esc(client?client.name:"")+'</div>'
               + '<div class="progress-track"><div class="progress-fill" style="width:'+(p.progress||0)+'%;"></div></div>'
               + '<div class="kanban-meta"><span>'+esc(p.deadline||"Ingen deadline")+'</span><span class="mono">'+(p.price?fmtDKK(p.price):"")+'</span></div>'
               + '</div>';
-          }).join("") || '<div class="kanban-drop">Ingen projekter</div>')
+          }).join("")
+        + '<div class="kanban-drop">'+(items.length===0 ? "Ingen projekter" : "Slip her for at flytte")+'</div>'
         + '</div></div>';
     }).join("");
 
     board.querySelectorAll(".kanban-card").forEach(card=>{
-      card.addEventListener("click", ()=>openProjectModal(card.dataset.projectId));
+      card.addEventListener("click", (e)=>{
+        if (e.target.closest("[data-del-project]")) return;
+        openProjectModal(card.dataset.projectId);
+      });
       card.addEventListener("dragstart", ()=>card.classList.add("dragging"));
       card.addEventListener("dragend", ()=>card.classList.remove("dragging"));
+    });
+    board.querySelectorAll("[data-del-project]").forEach(btn=>{
+      btn.addEventListener("click", (e)=>{
+        e.stopPropagation();
+        const p = STATE.projects.find(x=>x.id===btn.dataset.delProject);
+        if (p) deleteProject(p.id, p.name);
+      });
     });
     board.querySelectorAll(".kanban-col").forEach(col=>{
       col.addEventListener("dragover", (e)=>{ e.preventDefault(); col.classList.add("dragover"); });
@@ -698,26 +852,34 @@
         col.classList.remove("dragover");
         const dragging = board.querySelector(".dragging");
         if (!dragging) return;
-        const id = dragging.dataset.projectId;
-        const projects = load(K_PROJECTS, []);
-        const p = projects.find(x=>x.id===id);
-        if (p){ p.stage = col.dataset.stage; save(K_PROJECTS, projects); logActivity('Projekt flyttet: '+p.name+' → '+STAGE_LABEL[p.stage]); }
-        renderAll();
+        const p = STATE.projects.find(x=>x.id===dragging.dataset.projectId);
+        if (p && p.stage !== col.dataset.stage){
+          p.stage = col.dataset.stage;
+          logActivity('Projekt flyttet: '+p.name+' → '+STAGE_LABEL[p.stage]);
+          persist();
+        }
       });
     });
   }
 
+  function deleteProject(id, name){
+    if (!confirm('Slet "'+name+'"? Dette kan ikke fortrydes.')) return;
+    STATE.projects = STATE.projects.filter(p=>p.id!==id);
+    logActivity("Projekt slettet: "+name);
+    persist();
+  }
+
   const projectBackdrop = document.getElementById("project-modal-backdrop");
   function populateProjectClientSelect(selectedId){
-    const clients = load(K_CLIENTS, []);
     const sel = document.getElementById("project-client");
-    sel.innerHTML = clients.map(c=>'<option value="'+c.id+'"'+(c.id===selectedId?" selected":"")+'>'+esc(c.name)+'</option>').join("")
+    sel.innerHTML = STATE.clients.map(c=>'<option value="'+c.id+'"'+(c.id===selectedId?" selected":"")+'>'+esc(c.name)+'</option>').join("")
       || '<option value="">Opret en kunde først</option>';
   }
   function openProjectModal(id){
     const isEdit = !!id;
-    const p = isEdit ? load(K_PROJECTS,[]).find(x=>x.id===id) : {};
+    const p = isEdit ? STATE.projects.find(x=>x.id===id) : {};
     document.getElementById("project-modal-title").textContent = isEdit ? "Rediger projekt" : "Nyt projekt";
+    document.getElementById("project-delete-btn").style.display = isEdit ? "inline-flex" : "none";
     document.getElementById("project-id").value = id || "";
     populateProjectClientSelect(p.clientId);
     document.getElementById("project-name").value = p.name || "";
@@ -728,16 +890,22 @@
     projectBackdrop.classList.add("active");
   }
   document.getElementById("new-project-btn").addEventListener("click", ()=>{
-    if (load(K_CLIENTS,[]).length === 0){ alert("Opret en kunde først."); return; }
+    if (STATE.clients.length === 0){ alert("Opret en kunde først."); return; }
     openProjectModal(null);
   });
   projectBackdrop.querySelector('[data-close="project"]').addEventListener("click", ()=>projectBackdrop.classList.remove("active"));
   projectBackdrop.addEventListener("click", (e)=>{ if(e.target===projectBackdrop) projectBackdrop.classList.remove("active"); });
+  document.getElementById("project-delete-btn").addEventListener("click", ()=>{
+    const id = document.getElementById("project-id").value;
+    const p = STATE.projects.find(x=>x.id===id);
+    if (!p) return;
+    projectBackdrop.classList.remove("active");
+    deleteProject(p.id, p.name);
+  });
 
   document.getElementById("project-form").addEventListener("submit", (e)=>{
     e.preventDefault();
     const id = document.getElementById("project-id").value;
-    const projects = load(K_PROJECTS, []);
     const data = {
       id: id || uid(),
       clientId: document.getElementById("project-client").value,
@@ -750,22 +918,16 @@
       notes: "",
     };
     if (id){
-      const idx = projects.findIndex(p=>p.id===id);
-      projects[idx] = data;
+      const idx = STATE.projects.findIndex(p=>p.id===id);
+      STATE.projects[idx] = data;
       logActivity('Projekt opdateret: '+data.name);
     } else {
-      projects.unshift(data);
+      STATE.projects.unshift(data);
       logActivity('Nyt projekt oprettet: '+data.name);
     }
-    save(K_PROJECTS, projects);
     projectBackdrop.classList.remove("active");
-    renderAll();
+    persist();
   });
-
-  // ---------------- HELPERS ----------------
-  function esc(s){
-    return String(s==null?"":s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-  }
 
   function renderAll(){
     renderDashboard();
@@ -773,11 +935,28 @@
     renderProjects();
   }
 
-  // ---------------- INIT ----------------
+  // ================= INIT =================
   (async function init(){
-    await ensureDefaultAuth();
-    seedIfEmpty();
-    if (isLoggedIn()) showApp(); else showLogin();
+    const creds = loadCreds();
+    if (!creds){
+      cloudSetupScreen.style.display = "flex";
+      return;
+    }
+    CLOUD = creds;
+    try{
+      const record = await cloudRead();
+      STATE = Object.assign(defaultState(), record);
+      if (!STATE.auth){
+        STATE.auth = { username: "admin", passHash: await hash("nordicwebdesign") };
+        await cloudWrite(STATE);
+      }
+      cloudSetupScreen.style.display = "none";
+      if (isLoggedIn()) showApp(); else showLogin();
+    }catch(err){
+      cloudSetupScreen.style.display = "flex";
+      document.getElementById("cloud-setup-error").innerHTML =
+        '<div class="error-msg">Kunne ikke forbinde med gemte oplysninger: ' + esc(err.message) + '</div>';
+    }
   })();
 
 })();
