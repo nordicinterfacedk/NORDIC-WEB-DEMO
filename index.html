@@ -194,6 +194,53 @@
   .kv-row:last-child{border-bottom:none;}
   .kv-row .k{color:var(--faint);}
   .kv-row .v{color:var(--ink); text-align:right;}
+
+  /* ---------- finance summary bar ---------- */
+  .finance-bar{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px;}
+  @media (max-width:900px){.finance-bar{grid-template-columns:1fr;}}
+  .finance-cell{padding:16px 18px;}
+  .finance-cell .fc-label{font-size:11px; color:var(--faint); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px;}
+  .finance-cell .fc-value{font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:600; color:var(--ink);}
+
+  .badge-draft{background:var(--elevated); color:var(--muted);}
+  .badge-sent{background:rgba(94,168,255,0.1); color:var(--fjord);}
+  .badge-paid{background:rgba(74,222,156,0.1); color:var(--mint);}
+  .badge-overdue{background:rgba(240,112,138,0.1); color:var(--rose);}
+  .badge-cancelled{background:var(--elevated); color:var(--faint);}
+  .badge-accepted{background:rgba(74,222,156,0.1); color:var(--mint);}
+  .badge-declined{background:rgba(240,112,138,0.1); color:var(--rose);}
+
+  /* ---------- tasks ---------- */
+  .task-groups{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  @media (max-width:900px){.task-groups{grid-template-columns:1fr;}}
+  .task-row{display:flex; align-items:flex-start; gap:10px; padding:11px 16px; border-bottom:1px solid var(--border); font-size:13px;}
+  .task-row:last-child{border-bottom:none;}
+  .task-row input[type=checkbox]{margin-top:2px; accent-color:var(--fjord); width:auto;}
+  .task-row .t-title{color:var(--ink);}
+  .task-row.done .t-title{color:var(--faint); text-decoration:line-through;}
+  .task-row .t-meta{font-size:11px; color:var(--faint); margin-top:2px;}
+  .task-row .t-del{margin-left:auto; background:none; border:none; color:var(--faint); font-size:12px; flex-shrink:0;}
+  .task-row .t-del:hover{color:var(--rose);}
+  .quick-add{display:flex; gap:8px; padding:14px 16px; border-top:1px solid var(--border);}
+  .quick-add select, .quick-add input{width:auto; flex:1;}
+
+  /* ---------- checklist ---------- */
+  .checklist-row{display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--border); font-size:13px;}
+  .checklist-row:last-child{border-bottom:none;}
+  .checklist-row input[type=checkbox]{accent-color:var(--fjord); width:auto;}
+  .checklist-row.done span{color:var(--faint); text-decoration:line-through;}
+  .checklist-progress-wrap{padding:16px 20px; border-bottom:1px solid var(--border);}
+
+  /* ---------- files ---------- */
+  .file-row{display:flex; align-items:center; justify-content:space-between; padding:11px 20px; border-bottom:1px solid var(--border); font-size:13px;}
+  .file-row:last-child{border-bottom:none;}
+  .file-row a{color:var(--fjord); text-decoration:none;}
+  .file-row a:hover{text-decoration:underline;}
+  .file-cat{font-size:10px; color:var(--faint); text-transform:uppercase; letter-spacing:.03em; padding:2px 8px; border:1px solid var(--border); border-radius:999px; margin-right:8px;}
+
+  .subnav{display:flex; gap:6px; margin-bottom:20px;}
+  .subnav button{background:var(--elevated); border:1px solid var(--border); color:var(--muted); font-size:12px; font-weight:500; padding:7px 14px; border-radius:8px;}
+  .subnav button.active{background:var(--fjord); color:#0B0D0F; border-color:transparent;}
 </style>
 </head>
 <body>
@@ -270,6 +317,11 @@
       <div class="nav-item active" data-view="dashboard"><span class="dot">◆</span> Oversigt</div>
       <div class="nav-item" data-view="clients"><span class="dot">◈</span> Kunder</div>
       <div class="nav-item" data-view="projects"><span class="dot">▣</span> Projekter</div>
+      <div class="nav-item" data-view="finance"><span class="dot">◎</span> Økonomi</div>
+      <div class="nav-item" data-view="offers"><span class="dot">◐</span> Tilbud</div>
+      <div class="nav-item" data-view="tasks"><span class="dot">☑</span> Opgaver</div>
+      <div class="nav-item" data-view="checklist"><span class="dot">▤</span> Tjekliste</div>
+      <div class="nav-item" data-view="files"><span class="dot">▢</span> Filer</div>
     </nav>
     <div class="sidebar-footer">
       <div class="sync-status" id="sync-status"><span class="sync-dot"></span><span id="sync-status-text">Synkroniseret</span></div>
@@ -361,6 +413,118 @@
       <div class="kanban" id="kanban-board"></div>
     </section>
 
+    <!-- ---------- FINANCE / ØKONOMI ---------- -->
+    <section class="view" id="view-finance">
+      <div class="view-header">
+        <div><h1>Økonomi</h1><p>Fakturaer og indtjening.</p></div>
+        <button class="btn btn-primary" id="new-invoice-btn">+ Ny faktura</button>
+      </div>
+      <div class="finance-bar">
+        <div class="panel fjord-edge finance-cell">
+          <div class="fc-label">Denne måned</div>
+          <div class="fc-value" id="finance-month">0 kr</div>
+        </div>
+        <div class="panel fjord-edge finance-cell">
+          <div class="fc-label">I år</div>
+          <div class="fc-value" id="finance-year">0 kr</div>
+        </div>
+        <div class="panel fjord-edge finance-cell">
+          <div class="fc-label">Total (alle betalt)</div>
+          <div class="fc-value" id="finance-total">0 kr</div>
+        </div>
+      </div>
+      <div class="panel fjord-edge" style="overflow:hidden;">
+        <table>
+          <thead><tr><th>Faktura</th><th>Kunde</th><th>Beløb</th><th>Status</th><th>Udstedt</th><th></th></tr></thead>
+          <tbody id="invoices-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------- OFFERS / TILBUD ---------- -->
+    <section class="view" id="view-offers">
+      <div class="view-header">
+        <div><h1>Tilbud</h1><p id="offers-count">0 tilbud i alt</p></div>
+        <button class="btn btn-primary" id="new-offer-btn">+ Nyt tilbud</button>
+      </div>
+      <div class="panel fjord-edge" style="overflow:hidden;">
+        <table>
+          <thead><tr><th>Service</th><th>Kunde</th><th>Pris</th><th>Status</th><th></th></tr></thead>
+          <tbody id="offers-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------- TASKS / OPGAVER ---------- -->
+    <section class="view" id="view-tasks">
+      <div class="view-header">
+        <div><h1>Opgaver</h1><p id="tasks-count">0 opgaver i alt</p></div>
+      </div>
+      <div class="task-groups">
+        <div class="panel fjord-edge">
+          <div class="panel-header"><h2>To-do</h2></div>
+          <div id="tasks-todo"></div>
+        </div>
+        <div class="panel fjord-edge">
+          <div class="panel-header"><h2>I gang</h2></div>
+          <div id="tasks-progress"></div>
+        </div>
+        <div class="panel fjord-edge">
+          <div class="panel-header"><h2>Færdig</h2></div>
+          <div id="tasks-done"></div>
+        </div>
+      </div>
+      <div class="panel fjord-edge" style="margin-top:14px;">
+        <form class="quick-add" id="task-quick-add">
+          <select id="task-project" required></select>
+          <input type="text" id="task-title" placeholder="Ny opgave…" required />
+          <input type="date" id="task-due" style="max-width:150px;" />
+          <button type="submit" class="btn btn-primary">Tilføj</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ---------- CHECKLIST / TJEKLISTE ---------- -->
+    <section class="view" id="view-checklist">
+      <div class="view-header">
+        <div><h1>Website-tjekliste</h1><p>Standardtrin for hver hjemmeside-levering.</p></div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <select id="checklist-project" style="max-width:320px;"></select>
+      </div>
+      <div class="panel fjord-edge" id="checklist-panel" style="overflow:hidden;">
+        <div class="checklist-progress-wrap">
+          <div class="progress-track"><div class="progress-fill" id="checklist-progress-fill" style="width:0%;"></div></div>
+        </div>
+        <div id="checklist-items"></div>
+      </div>
+    </section>
+
+    <!-- ---------- FILES / FILER ---------- -->
+    <section class="view" id="view-files">
+      <div class="view-header">
+        <div><h1>Filer</h1><p>Links og dokumenter pr. kunde.</p></div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <select id="files-client" style="max-width:320px;"></select>
+      </div>
+      <div class="panel fjord-edge" style="overflow:hidden;">
+        <div id="files-list"></div>
+        <form class="quick-add" id="file-quick-add">
+          <select id="file-category">
+            <option value="images">Billeder</option>
+            <option value="documents">Dokumenter</option>
+            <option value="contracts">Kontrakter</option>
+            <option value="website_files">Website-filer</option>
+            <option value="final_delivery">Endelig levering</option>
+          </select>
+          <input type="text" id="file-name" placeholder="Filnavn" required />
+          <input type="text" id="file-url" placeholder="Link (Drive, Dropbox, ...)" required />
+          <button type="submit" class="btn btn-primary">Tilføj</button>
+        </form>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -446,6 +610,62 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="invoice-modal-backdrop">
+  <form class="panel fjord-edge modal" id="invoice-form">
+    <h2 id="invoice-modal-title">Ny faktura</h2>
+    <input type="hidden" id="invoice-id" />
+    <div class="field"><label>Kunde *</label><select id="invoice-client" required></select></div>
+    <div class="field-row">
+      <div class="field"><label>Fakturanummer *</label><input type="text" id="invoice-number" required /></div>
+      <div class="field"><label>Beløb (kr) *</label><input type="number" id="invoice-amount" min="0" required /></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Status</label>
+        <select id="invoice-status">
+          <option value="draft">Kladde</option><option value="sent">Sendt</option>
+          <option value="paid">Betalt</option><option value="overdue">Forfalden</option>
+          <option value="cancelled">Annulleret</option>
+        </select>
+      </div>
+      <div class="field"><label>Udstedt</label><input type="date" id="invoice-issued" /></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-danger" id="invoice-delete-btn" style="display:none;">Slet</button>
+      <div class="modal-actions-right">
+        <button type="button" class="btn btn-ghost" data-close="invoice">Annuller</button>
+        <button type="submit" class="btn btn-primary">Gem</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="modal-backdrop" id="offer-modal-backdrop">
+  <form class="panel fjord-edge modal" id="offer-form">
+    <h2 id="offer-modal-title">Nyt tilbud</h2>
+    <input type="hidden" id="offer-id" />
+    <div class="field"><label>Kunde *</label><select id="offer-client" required></select></div>
+    <div class="field"><label>Service *</label><input type="text" id="offer-service" required /></div>
+    <div class="field"><label>Beskrivelse</label><textarea id="offer-description" rows="3"></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Pris (kr) *</label><input type="number" id="offer-price" min="0" required /></div>
+      <div class="field"><label>Deadline</label><input type="date" id="offer-deadline" /></div>
+    </div>
+    <div class="field"><label>Status</label>
+      <select id="offer-status">
+        <option value="draft">Kladde</option><option value="sent">Sendt</option>
+        <option value="accepted">Accepteret</option><option value="declined">Afvist</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-danger" id="offer-delete-btn" style="display:none;">Slet</button>
+      <div class="modal-actions-right">
+        <button type="button" class="btn btn-ghost" data-close="offer">Annuller</button>
+        <button type="submit" class="btn btn-primary">Gem</button>
+      </div>
+    </div>
+  </form>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -459,7 +679,7 @@
   let pushTimer = null;
 
   function defaultState(){
-    return { auth: null, clients: [], projects: [], invoices: [], activity: [] };
+    return { auth: null, clients: [], projects: [], invoices: [], activity: [], offers: [], tasks: [], checklist: [], files: [] };
   }
 
   async function hash(str){
@@ -528,6 +748,9 @@
   const STATUS_LABEL = {lead:"Lead", contacted:"Kontaktet", offer_sent:"Tilbud sendt", active:"Aktiv kunde", completed:"Færdig", past:"Tidligere kunde"};
   const STAGE_LABEL = {lead:"Lead", design:"Design", development:"Udvikling", review:"Review", delivered:"Leveret"};
   const STAGES = ["lead","design","development","review","delivered"];
+  const INVOICE_STATUS_LABEL = {draft:"Kladde", sent:"Sendt", paid:"Betalt", overdue:"Forfalden", cancelled:"Annulleret"};
+  const OFFER_STATUS_LABEL = {draft:"Kladde", sent:"Sendt", accepted:"Accepteret", declined:"Afvist"};
+  const CHECKLIST_TEMPLATE = ["Domain købt","Design færdigt","Mobile version","SEO opsætning","Kontaktformular","Performance test","Levering"];
 
   function logActivity(summary){
     STATE.activity.unshift({id:uid(), summary, createdAt:new Date().toISOString()});
@@ -929,10 +1152,341 @@
     persist();
   });
 
+  // ================= FINANCE / ØKONOMI =================
+  function renderFinance(){
+    const invoices = STATE.invoices;
+    const clients = STATE.clients;
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+
+    const paid = invoices.filter(i=>i.status==="paid" && i.paidAt);
+    const monthTotal = paid.filter(i=>new Date(i.paidAt) >= monthStart).reduce((s,i)=>s+Number(i.amount||0),0);
+    const yearTotal = paid.filter(i=>new Date(i.paidAt) >= yearStart).reduce((s,i)=>s+Number(i.amount||0),0);
+    const allTotal = paid.reduce((s,i)=>s+Number(i.amount||0),0);
+    document.getElementById("finance-month").textContent = fmtDKK(monthTotal);
+    document.getElementById("finance-year").textContent = fmtDKK(yearTotal);
+    document.getElementById("finance-total").textContent = fmtDKK(allTotal);
+
+    document.getElementById("invoices-table-body").innerHTML = invoices.length ? invoices.map(i=>{
+      const client = clients.find(c=>c.id===i.clientId);
+      return '<tr>'
+        + '<td class="mono" style="color:var(--ink);">'+esc(i.invoiceNumber)+'</td>'
+        + '<td style="color:var(--muted);">'+esc(client?client.name:"—")+'</td>'
+        + '<td class="mono" style="color:var(--ink);">'+fmtDKK(i.amount)+'</td>'
+        + '<td><span class="badge badge-'+i.status+'">'+INVOICE_STATUS_LABEL[i.status]+'</span></td>'
+        + '<td style="color:var(--faint); font-size:12px;">'+esc(i.issuedAt||"—")+'</td>'
+        + '<td style="text-align:right; white-space:nowrap;">'
+          + '<button class="row-action edit" data-edit-invoice="'+i.id+'">Rediger</button>'
+          + '<button class="row-action delete" data-delete-invoice="'+i.id+'">Slet</button>'
+        + '</td></tr>';
+    }).join("") : '<tr><td colspan="6" class="empty-row">Ingen fakturaer endnu.</td></tr>';
+
+    document.getElementById("invoices-table-body").querySelectorAll("[data-edit-invoice]").forEach(btn=>
+      btn.addEventListener("click", ()=>openInvoiceModal(btn.dataset.editInvoice)));
+    document.getElementById("invoices-table-body").querySelectorAll("[data-delete-invoice]").forEach(btn=>
+      btn.addEventListener("click", ()=>{
+        const inv = STATE.invoices.find(x=>x.id===btn.dataset.deleteInvoice);
+        if (inv && confirm('Slet faktura '+inv.invoiceNumber+'?')){
+          STATE.invoices = STATE.invoices.filter(x=>x.id!==inv.id);
+          logActivity('Faktura slettet: '+inv.invoiceNumber);
+          persist();
+        }
+      }));
+  }
+
+  const invoiceBackdrop = document.getElementById("invoice-modal-backdrop");
+  function openInvoiceModal(id){
+    const isEdit = !!id;
+    document.getElementById("invoice-modal-title").textContent = isEdit ? "Rediger faktura" : "Ny faktura";
+    document.getElementById("invoice-delete-btn").style.display = isEdit ? "inline-flex" : "none";
+    const i = isEdit ? STATE.invoices.find(x=>x.id===id) : {};
+    document.getElementById("invoice-id").value = id || "";
+    document.getElementById("invoice-client").innerHTML = STATE.clients.map(c=>
+      '<option value="'+c.id+'"'+(c.id===i.clientId?" selected":"")+'>'+esc(c.name)+'</option>').join("")
+      || '<option value="">Opret en kunde først</option>';
+    document.getElementById("invoice-number").value = i.invoiceNumber || "";
+    document.getElementById("invoice-amount").value = i.amount || "";
+    document.getElementById("invoice-status").value = i.status || "draft";
+    document.getElementById("invoice-issued").value = i.issuedAt || new Date().toISOString().slice(0,10);
+    invoiceBackdrop.classList.add("active");
+  }
+  document.getElementById("new-invoice-btn").addEventListener("click", ()=>{
+    if (STATE.clients.length === 0){ alert("Opret en kunde først."); return; }
+    openInvoiceModal(null);
+  });
+  invoiceBackdrop.querySelector('[data-close="invoice"]').addEventListener("click", ()=>invoiceBackdrop.classList.remove("active"));
+  invoiceBackdrop.addEventListener("click", (e)=>{ if(e.target===invoiceBackdrop) invoiceBackdrop.classList.remove("active"); });
+  document.getElementById("invoice-delete-btn").addEventListener("click", ()=>{
+    const id = document.getElementById("invoice-id").value;
+    const inv = STATE.invoices.find(x=>x.id===id);
+    if (!inv) return;
+    invoiceBackdrop.classList.remove("active");
+    STATE.invoices = STATE.invoices.filter(x=>x.id!==id);
+    logActivity('Faktura slettet: '+inv.invoiceNumber);
+    persist();
+  });
+  document.getElementById("invoice-form").addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const id = document.getElementById("invoice-id").value;
+    const status = document.getElementById("invoice-status").value;
+    const existing = id ? STATE.invoices.find(x=>x.id===id) : null;
+    const data = {
+      id: id || uid(),
+      clientId: document.getElementById("invoice-client").value,
+      invoiceNumber: document.getElementById("invoice-number").value.trim(),
+      amount: Number(document.getElementById("invoice-amount").value || 0),
+      status: status,
+      issuedAt: document.getElementById("invoice-issued").value,
+      paidAt: status === "paid" ? ((existing && existing.paidAt) || new Date().toISOString().slice(0,10)) : null,
+    };
+    if (id){
+      const idx = STATE.invoices.findIndex(x=>x.id===id);
+      STATE.invoices[idx] = data;
+      logActivity('Faktura opdateret: '+data.invoiceNumber);
+    } else {
+      STATE.invoices.unshift(data);
+      logActivity('Ny faktura oprettet: '+data.invoiceNumber);
+    }
+    invoiceBackdrop.classList.remove("active");
+    persist();
+  });
+
+  // ================= OFFERS / TILBUD =================
+  function renderOffers(){
+    const offers = STATE.offers;
+    const clients = STATE.clients;
+    document.getElementById("offers-count").textContent = offers.length + " tilbud i alt";
+    document.getElementById("offers-table-body").innerHTML = offers.length ? offers.map(o=>{
+      const client = clients.find(c=>c.id===o.clientId);
+      return '<tr>'
+        + '<td style="color:var(--ink);">'+esc(o.service)+'</td>'
+        + '<td style="color:var(--muted);">'+esc(client?client.name:"—")+'</td>'
+        + '<td class="mono" style="color:var(--ink);">'+fmtDKK(o.price)+'</td>'
+        + '<td><span class="badge badge-'+o.status+'">'+OFFER_STATUS_LABEL[o.status]+'</span></td>'
+        + '<td style="text-align:right; white-space:nowrap;">'
+          + '<button class="row-action edit" data-edit-offer="'+o.id+'">Rediger</button>'
+          + '<button class="row-action delete" data-delete-offer="'+o.id+'">Slet</button>'
+        + '</td></tr>';
+    }).join("") : '<tr><td colspan="5" class="empty-row">Ingen tilbud endnu.</td></tr>';
+
+    document.getElementById("offers-table-body").querySelectorAll("[data-edit-offer]").forEach(btn=>
+      btn.addEventListener("click", ()=>openOfferModal(btn.dataset.editOffer)));
+    document.getElementById("offers-table-body").querySelectorAll("[data-delete-offer]").forEach(btn=>
+      btn.addEventListener("click", ()=>{
+        const o = STATE.offers.find(x=>x.id===btn.dataset.deleteOffer);
+        if (o && confirm('Slet tilbud "'+o.service+'"?')){
+          STATE.offers = STATE.offers.filter(x=>x.id!==o.id);
+          logActivity('Tilbud slettet: '+o.service);
+          persist();
+        }
+      }));
+  }
+
+  const offerBackdrop = document.getElementById("offer-modal-backdrop");
+  function openOfferModal(id){
+    const isEdit = !!id;
+    document.getElementById("offer-modal-title").textContent = isEdit ? "Rediger tilbud" : "Nyt tilbud";
+    document.getElementById("offer-delete-btn").style.display = isEdit ? "inline-flex" : "none";
+    const o = isEdit ? STATE.offers.find(x=>x.id===id) : {};
+    document.getElementById("offer-id").value = id || "";
+    document.getElementById("offer-client").innerHTML = STATE.clients.map(c=>
+      '<option value="'+c.id+'"'+(c.id===o.clientId?" selected":"")+'>'+esc(c.name)+'</option>').join("")
+      || '<option value="">Opret en kunde først</option>';
+    document.getElementById("offer-service").value = o.service || "";
+    document.getElementById("offer-description").value = o.description || "";
+    document.getElementById("offer-price").value = o.price || "";
+    document.getElementById("offer-deadline").value = o.deadline || "";
+    document.getElementById("offer-status").value = o.status || "draft";
+    offerBackdrop.classList.add("active");
+  }
+  document.getElementById("new-offer-btn").addEventListener("click", ()=>{
+    if (STATE.clients.length === 0){ alert("Opret en kunde først."); return; }
+    openOfferModal(null);
+  });
+  offerBackdrop.querySelector('[data-close="offer"]').addEventListener("click", ()=>offerBackdrop.classList.remove("active"));
+  offerBackdrop.addEventListener("click", (e)=>{ if(e.target===offerBackdrop) offerBackdrop.classList.remove("active"); });
+  document.getElementById("offer-delete-btn").addEventListener("click", ()=>{
+    const id = document.getElementById("offer-id").value;
+    const o = STATE.offers.find(x=>x.id===id);
+    if (!o) return;
+    offerBackdrop.classList.remove("active");
+    STATE.offers = STATE.offers.filter(x=>x.id!==id);
+    logActivity('Tilbud slettet: '+o.service);
+    persist();
+  });
+  document.getElementById("offer-form").addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const id = document.getElementById("offer-id").value;
+    const data = {
+      id: id || uid(),
+      clientId: document.getElementById("offer-client").value,
+      service: document.getElementById("offer-service").value.trim(),
+      description: document.getElementById("offer-description").value.trim(),
+      price: Number(document.getElementById("offer-price").value || 0),
+      deadline: document.getElementById("offer-deadline").value,
+      status: document.getElementById("offer-status").value,
+    };
+    if (id){
+      const idx = STATE.offers.findIndex(x=>x.id===id);
+      STATE.offers[idx] = data;
+      logActivity('Tilbud opdateret: '+data.service);
+    } else {
+      STATE.offers.unshift(data);
+      logActivity('Nyt tilbud oprettet: '+data.service);
+    }
+    offerBackdrop.classList.remove("active");
+    persist();
+  });
+
+  // ================= TASKS / OPGAVER =================
+  function renderTasks(){
+    const tasks = STATE.tasks;
+    const projects = STATE.projects;
+    document.getElementById("tasks-count").textContent = tasks.length + " opgaver i alt";
+
+    const projSelect = document.getElementById("task-project");
+    projSelect.innerHTML = projects.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("")
+      || '<option value="">Opret et projekt først</option>';
+
+    function rowHtml(t){
+      const project = projects.find(p=>p.id===t.projectId);
+      return '<div class="task-row'+(t.status==="done"?" done":"")+'">'
+        + '<input type="checkbox" data-toggle-task="'+t.id+'" '+(t.status==="done"?"checked":"")+' />'
+        + '<div style="flex:1;"><div class="t-title">'+esc(t.title)+'</div>'
+        + '<div class="t-meta">'+esc(project?project.name:"")+(t.dueDate?" · "+esc(t.dueDate):"")+'</div></div>'
+        + '<button class="t-del" data-del-task="'+t.id+'">✕</button></div>';
+    }
+    const todo = tasks.filter(t=>t.status==="todo");
+    const inProgress = tasks.filter(t=>t.status==="in_progress");
+    const done = tasks.filter(t=>t.status==="done");
+    document.getElementById("tasks-todo").innerHTML = todo.length ? todo.map(rowHtml).join("") : '<div class="empty-row">Ingen opgaver.</div>';
+    document.getElementById("tasks-progress").innerHTML = inProgress.length ? inProgress.map(rowHtml).join("") : '<div class="empty-row">Ingen opgaver.</div>';
+    document.getElementById("tasks-done").innerHTML = done.length ? done.map(rowHtml).join("") : '<div class="empty-row">Ingen opgaver.</div>';
+
+    document.querySelectorAll("[data-toggle-task]").forEach(cb=>{
+      cb.addEventListener("change", ()=>{
+        const t = STATE.tasks.find(x=>x.id===cb.dataset.toggleTask);
+        if (!t) return;
+        // cycle: todo -> in_progress -> done, checkbox just marks done directly;
+        // clicking an unchecked todo/in-progress box marks it done, unchecking a done one resets to todo
+        t.status = cb.checked ? "done" : "todo";
+        persist();
+      });
+    });
+    document.querySelectorAll("[data-del-task]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        STATE.tasks = STATE.tasks.filter(x=>x.id!==btn.dataset.delTask);
+        persist();
+      });
+    });
+  }
+
+  document.getElementById("task-quick-add").addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const projectId = document.getElementById("task-project").value;
+    const title = document.getElementById("task-title").value.trim();
+    if (!projectId || !title) return;
+    STATE.tasks.unshift({ id: uid(), projectId, title, status: "todo", dueDate: document.getElementById("task-due").value || null });
+    document.getElementById("task-title").value = "";
+    document.getElementById("task-due").value = "";
+    persist();
+  });
+
+  // ================= CHECKLIST / TJEKLISTE =================
+  function ensureChecklistFor(projectId){
+    const has = STATE.checklist.some(c=>c.projectId===projectId);
+    if (!has){
+      CHECKLIST_TEMPLATE.forEach((label, i)=>{
+        STATE.checklist.push({ id: uid(), projectId, label, done: false, position: i });
+      });
+    }
+  }
+
+  function renderChecklist(){
+    const sel = document.getElementById("checklist-project");
+    const prevValue = sel.value;
+    sel.innerHTML = STATE.projects.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("")
+      || '<option value="">Opret et projekt først</option>';
+    if (prevValue && STATE.projects.some(p=>p.id===prevValue)) sel.value = prevValue;
+    const projectId = sel.value;
+
+    if (!projectId){
+      document.getElementById("checklist-items").innerHTML = '<div class="empty-row">Opret et projekt først.</div>';
+      document.getElementById("checklist-progress-fill").style.width = "0%";
+      return;
+    }
+    ensureChecklistFor(projectId);
+    const items = STATE.checklist.filter(c=>c.projectId===projectId).sort((a,b)=>a.position-b.position);
+    const doneCount = items.filter(i=>i.done).length;
+    document.getElementById("checklist-progress-fill").style.width = (items.length ? Math.round(doneCount/items.length*100) : 0) + "%";
+    document.getElementById("checklist-items").innerHTML = items.map(i=>
+      '<div class="checklist-row'+(i.done?" done":"")+'">'
+      + '<input type="checkbox" data-toggle-check="'+i.id+'" '+(i.done?"checked":"")+' />'
+      + '<span>'+esc(i.label)+'</span></div>'
+    ).join("");
+    document.querySelectorAll("[data-toggle-check]").forEach(cb=>{
+      cb.addEventListener("change", ()=>{
+        const item = STATE.checklist.find(x=>x.id===cb.dataset.toggleCheck);
+        if (item){ item.done = cb.checked; persist(); }
+      });
+    });
+  }
+  document.getElementById("checklist-project").addEventListener("change", renderChecklist);
+
+  // ================= FILES / FILER =================
+  const FILE_CAT_LABEL = { images:"Billeder", documents:"Dokumenter", contracts:"Kontrakter", website_files:"Website-filer", final_delivery:"Endelig levering" };
+
+  function renderFiles(){
+    const sel = document.getElementById("files-client");
+    const prevValue = sel.value;
+    sel.innerHTML = STATE.clients.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join("")
+      || '<option value="">Opret en kunde først</option>';
+    if (prevValue && STATE.clients.some(c=>c.id===prevValue)) sel.value = prevValue;
+    const clientId = sel.value;
+
+    const list = document.getElementById("files-list");
+    if (!clientId){
+      list.innerHTML = '<div class="empty-row">Opret en kunde først.</div>';
+      return;
+    }
+    const files = STATE.files.filter(f=>f.clientId===clientId);
+    list.innerHTML = files.length ? files.map(f=>
+      '<div class="file-row"><div><span class="file-cat">'+FILE_CAT_LABEL[f.category]+'</span>'
+      + '<a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name)+'</a></div>'
+      + '<button class="row-action delete" data-del-file="'+f.id+'">Slet</button></div>'
+    ).join("") : '<div class="empty-row">Ingen filer endnu.</div>';
+
+    list.querySelectorAll("[data-del-file]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        STATE.files = STATE.files.filter(x=>x.id!==btn.dataset.delFile);
+        persist();
+      });
+    });
+  }
+  document.getElementById("files-client").addEventListener("change", renderFiles);
+
+  document.getElementById("file-quick-add").addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const clientId = document.getElementById("files-client").value;
+    const name = document.getElementById("file-name").value.trim();
+    const url = document.getElementById("file-url").value.trim();
+    if (!clientId || !name || !url) return;
+    STATE.files.unshift({ id: uid(), clientId, category: document.getElementById("file-category").value, name, url });
+    document.getElementById("file-name").value = "";
+    document.getElementById("file-url").value = "";
+    persist();
+  });
+
   function renderAll(){
     renderDashboard();
     renderClients();
     renderProjects();
+    renderFinance();
+    renderOffers();
+    renderTasks();
+    renderChecklist();
+    renderFiles();
   }
 
   // ================= INIT =================
