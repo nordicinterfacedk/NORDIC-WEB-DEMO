@@ -539,25 +539,20 @@
     <!-- ---------- FILES / FILER ---------- -->
     <section class="view" id="view-files">
       <div class="view-header">
-        <div><h1>Filer</h1><p>Links og dokumenter pr. kunde.</p></div>
+        <div><h1>Filer</h1><p>Upload dokumenter og filer pr. kunde.</p></div>
       </div>
       <div style="margin-bottom:16px;">
         <select id="files-client" style="max-width:320px;"></select>
       </div>
       <div class="panel fjord-edge" style="overflow:hidden;">
         <div id="files-list"></div>
-        <form class="quick-add" id="file-quick-add">
-          <select id="file-category">
-            <option value="images">Billeder</option>
-            <option value="documents">Dokumenter</option>
-            <option value="contracts">Kontrakter</option>
-            <option value="website_files">Website-filer</option>
-            <option value="final_delivery">Endelig levering</option>
-          </select>
-          <input type="text" id="file-name" placeholder="Filnavn" required />
-          <input type="text" id="file-url" placeholder="Link (Drive, Dropbox, ...)" required />
-          <button type="submit" class="btn btn-primary">Tilføj</button>
+        <form class="quick-add" id="file-quick-add" style="flex-wrap:wrap;">
+          <input type="text" id="file-category" list="file-category-list" placeholder="Kategori (fx Kontrakter)" required style="flex:0 1 170px;" />
+          <datalist id="file-category-list"></datalist>
+          <input type="file" id="file-input" required style="flex:1 1 220px; padding:6px 8px;" />
+          <button type="submit" class="btn btn-primary" id="file-upload-btn">Upload</button>
         </form>
+        <div id="file-upload-status" style="padding:0 16px 14px; font-size:12px; color:var(--faint);"></div>
       </div>
     </section>
 
@@ -636,6 +631,20 @@
       <label>Cloud Bin ID (del denne med andre enheder)</label>
       <div class="bin-id-display" id="settings-bin-id"></div>
     </div>
+
+    <div class="field" style="margin-top:22px; padding-top:18px; border-top:1px solid var(--border);">
+      <label style="margin-bottom:2px;">Filupload (Cloudinary)</label>
+      <p style="font-size:11.5px; color:var(--faint); line-height:1.5; margin:2px 0 12px;">
+        Gratis konto på <a href="https://cloudinary.com" target="_blank" rel="noopener" style="color:var(--fjord);">cloudinary.com</a> →
+        Settings → Upload → opret et upload preset med Signing Mode = <strong>Unsigned</strong>.
+        Cloud name står øverst på dit dashboard. Sat op én gang, virker på alle enheder.
+      </p>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Cloud name</label><input type="text" id="settings-cloud-name" placeholder="fx nordic-interface" /></div>
+      <div class="field"><label>Upload preset</label><input type="text" id="settings-upload-preset" placeholder="fx unsigned_uploads" /></div>
+    </div>
+
     <div class="modal-actions">
       <div></div>
       <div class="modal-actions-right">
@@ -665,11 +674,16 @@
       </div>
       <div class="field"><label>Udstedt</label><input type="date" id="invoice-issued" /></div>
     </div>
+    <div class="field">
+      <label>Fakturafil (PDF, billede, ...)</label>
+      <div id="invoice-current-file" style="font-size:12px; margin-bottom:6px;"></div>
+      <input type="file" id="invoice-file-input" />
+    </div>
     <div class="modal-actions">
       <button type="button" class="btn btn-danger" id="invoice-delete-btn" style="display:none;">Slet</button>
       <div class="modal-actions-right">
         <button type="button" class="btn btn-ghost" data-close="invoice">Annuller</button>
-        <button type="submit" class="btn btn-primary">Gem</button>
+        <button type="submit" class="btn btn-primary" id="invoice-save-btn">Gem</button>
       </div>
     </div>
   </form>
@@ -715,7 +729,7 @@
   let pushTimer = null;
 
   function defaultState(){
-    return { auth: null, clients: [], projects: [], invoices: [], activity: [], offers: [], tasks: [], checklist: [], files: [] };
+    return { auth: null, clients: [], projects: [], invoices: [], activity: [], offers: [], tasks: [], checklist: [], files: [], cloudinary: null };
   }
 
   async function hash(str){
@@ -776,9 +790,39 @@
   function loadCreds(){ try{ return JSON.parse(localStorage.getItem(K_CLOUD_CREDS)); }catch(e){ return null; } }
   function saveCreds(c){ localStorage.setItem(K_CLOUD_CREDS, JSON.stringify(c)); }
 
+  // ================= FILE UPLOAD (Cloudinary, unsigned) =================
+  // Cloud name + upload preset are public identifiers by design (that's what
+  // "unsigned" means) — safe to keep in the synced state, no secret key needed.
+  async function uploadFile(file){
+    const cfg = STATE.cloudinary;
+    if (!cfg || !cfg.cloudName || !cfg.uploadPreset){
+      throw new Error("Filupload er ikke sat op endnu. Gå til Indstillinger og udfyld cloud name + upload preset.");
+    }
+    const form = new FormData();
+    form.append("file", file);
+    form.append("upload_preset", cfg.uploadPreset);
+    const res = await fetch("https://api.cloudinary.com/v1_1/" + cfg.cloudName + "/auto/upload", {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok){
+      const body = await res.json().catch(()=>null);
+      throw new Error((body && body.error && body.error.message) || "Filupload fejlede.");
+    }
+    const data = await res.json();
+    return { url: data.secure_url, name: file.name, size: file.size };
+  }
+
   // ================= UTIL =================
   function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
   function fmtDKK(n){ return new Intl.NumberFormat("da-DK",{maximumFractionDigits:0}).format(n||0) + " kr"; }
+  function fmtBytes(n){
+    if (!n) return "";
+    const units = ["B","KB","MB","GB"];
+    let i = 0; let v = n;
+    while (v >= 1024 && i < units.length-1){ v /= 1024; i++; }
+    return v.toFixed(v < 10 && i > 0 ? 1 : 0) + " " + units[i];
+  }
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
 
   const STATUS_LABEL = {lead:"Lead", contacted:"Kontaktet", offer_sent:"Tilbud sendt", active:"Aktiv kunde", completed:"Færdig", past:"Tidligere kunde"};
@@ -877,6 +921,8 @@
     document.getElementById("settings-username").value = STATE.auth.username;
     document.getElementById("settings-password").value = "";
     document.getElementById("settings-bin-id").textContent = CLOUD.binId;
+    document.getElementById("settings-cloud-name").value = (STATE.cloudinary && STATE.cloudinary.cloudName) || "";
+    document.getElementById("settings-upload-preset").value = (STATE.cloudinary && STATE.cloudinary.uploadPreset) || "";
     settingsBackdrop.classList.add("active");
   });
   settingsBackdrop.querySelector('[data-close="settings"]').addEventListener("click", ()=>settingsBackdrop.classList.remove("active"));
@@ -886,6 +932,9 @@
     if (newUser) STATE.auth.username = newUser;
     if (newPass) STATE.auth.passHash = await hash(newPass);
     document.getElementById("current-user").textContent = STATE.auth.username;
+    const cloudName = document.getElementById("settings-cloud-name").value.trim();
+    const uploadPreset = document.getElementById("settings-upload-preset").value.trim();
+    STATE.cloudinary = (cloudName && uploadPreset) ? { cloudName, uploadPreset } : null;
     settingsBackdrop.classList.remove("active");
     persist();
   });
@@ -1207,7 +1256,9 @@
     document.getElementById("invoices-table-body").innerHTML = invoices.length ? invoices.map(i=>{
       const client = clients.find(c=>c.id===i.clientId);
       return '<tr>'
-        + '<td class="mono" style="color:var(--ink);">'+esc(i.invoiceNumber)+'</td>'
+        + '<td class="mono" style="color:var(--ink);">'+esc(i.invoiceNumber)
+          + (i.fileUrl ? ' <a href="'+esc(i.fileUrl)+'" target="_blank" rel="noopener" title="'+esc(i.fileName||"Fil")+'" style="color:var(--fjord); margin-left:4px;">📎</a>' : '')
+          + '</td>'
         + '<td style="color:var(--muted);">'+esc(client?client.name:"—")+'</td>'
         + '<td class="mono" style="color:var(--ink);">'+fmtDKK(i.amount)+'</td>'
         + '<td><span class="badge badge-'+i.status+'">'+INVOICE_STATUS_LABEL[i.status]+'</span></td>'
@@ -1245,6 +1296,10 @@
     document.getElementById("invoice-amount").value = i.amount || "";
     document.getElementById("invoice-status").value = i.status || "draft";
     document.getElementById("invoice-issued").value = i.issuedAt || new Date().toISOString().slice(0,10);
+    document.getElementById("invoice-file-input").value = "";
+    document.getElementById("invoice-current-file").innerHTML = i.fileUrl
+      ? 'Vedhæftet: <a href="'+esc(i.fileUrl)+'" target="_blank" rel="noopener" style="color:var(--fjord);">'+esc(i.fileName||"fil")+'</a>'
+      : '<span style="color:var(--faint);">Ingen fil vedhæftet endnu.</span>';
     invoiceBackdrop.classList.add("active");
   }
   document.getElementById("new-invoice-btn").addEventListener("click", ()=>{
@@ -1262,19 +1317,47 @@
     logActivity('Faktura slettet: '+inv.invoiceNumber);
     persist();
   });
-  document.getElementById("invoice-form").addEventListener("submit", (e)=>{
+  document.getElementById("invoice-form").addEventListener("submit", async (e)=>{
     e.preventDefault();
     const id = document.getElementById("invoice-id").value;
     const status = document.getElementById("invoice-status").value;
     const existing = id ? STATE.invoices.find(x=>x.id===id) : null;
+    const clientId = document.getElementById("invoice-client").value;
+    const invoiceNumber = document.getElementById("invoice-number").value.trim();
+    const saveBtn = document.getElementById("invoice-save-btn");
+    const newFile = document.getElementById("invoice-file-input").files[0];
+
+    let fileUrl = existing ? existing.fileUrl : null;
+    let fileName = existing ? existing.fileName : null;
+    if (newFile){
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Uploader…";
+      try{
+        const uploaded = await uploadFile(newFile);
+        fileUrl = uploaded.url;
+        fileName = uploaded.name;
+        // also surface it in the general Files list for that client
+        STATE.files.unshift({ id: uid(), clientId, category: "Fakturaer", name: uploaded.name, url: uploaded.url, size: uploaded.size });
+      }catch(err){
+        alert(err.message);
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Gem";
+        return;
+      }
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Gem";
+    }
+
     const data = {
       id: id || uid(),
-      clientId: document.getElementById("invoice-client").value,
-      invoiceNumber: document.getElementById("invoice-number").value.trim(),
+      clientId: clientId,
+      invoiceNumber: invoiceNumber,
       amount: Number(document.getElementById("invoice-amount").value || 0),
       status: status,
       issuedAt: document.getElementById("invoice-issued").value,
       paidAt: status === "paid" ? ((existing && existing.paidAt) || new Date().toISOString().slice(0,10)) : null,
+      fileUrl: fileUrl,
+      fileName: fileName,
     };
     if (id){
       const idx = STATE.invoices.findIndex(x=>x.id===id);
@@ -1471,8 +1554,6 @@
   document.getElementById("checklist-project").addEventListener("change", renderChecklist);
 
   // ================= FILES / FILER =================
-  const FILE_CAT_LABEL = { images:"Billeder", documents:"Dokumenter", contracts:"Kontrakter", website_files:"Website-filer", final_delivery:"Endelig levering" };
-
   function renderFiles(){
     const sel = document.getElementById("files-client");
     const prevValue = sel.value;
@@ -1481,6 +1562,11 @@
     if (prevValue && STATE.clients.some(c=>c.id===prevValue)) sel.value = prevValue;
     const clientId = sel.value;
 
+    // free-text category suggestions, built from whatever categories exist already
+    const knownCats = Array.from(new Set(STATE.files.map(f=>f.category).filter(Boolean)));
+    if (knownCats.length === 0) knownCats.push("Billeder","Dokumenter","Kontrakter","Website-filer","Endelig levering","Fakturaer");
+    document.getElementById("file-category-list").innerHTML = knownCats.map(c=>'<option value="'+esc(c)+'">').join("");
+
     const list = document.getElementById("files-list");
     if (!clientId){
       list.innerHTML = '<div class="empty-row">Opret en kunde først.</div>';
@@ -1488,8 +1574,10 @@
     }
     const files = STATE.files.filter(f=>f.clientId===clientId);
     list.innerHTML = files.length ? files.map(f=>
-      '<div class="file-row"><div><span class="file-cat">'+FILE_CAT_LABEL[f.category]+'</span>'
-      + '<a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name)+'</a></div>'
+      '<div class="file-row"><div><span class="file-cat">'+esc(f.category)+'</span>'
+      + '<a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name)+'</a>'
+      + (f.size ? ' <span style="color:var(--faint); font-size:11px;">('+fmtBytes(f.size)+')</span>' : '')
+      + '</div>'
       + '<button class="row-action delete" data-del-file="'+f.id+'">Slet</button></div>'
     ).join("") : '<div class="empty-row">Ingen filer endnu.</div>';
 
@@ -1502,16 +1590,34 @@
   }
   document.getElementById("files-client").addEventListener("change", renderFiles);
 
-  document.getElementById("file-quick-add").addEventListener("submit", (e)=>{
+  document.getElementById("file-quick-add").addEventListener("submit", async (e)=>{
     e.preventDefault();
     const clientId = document.getElementById("files-client").value;
-    const name = document.getElementById("file-name").value.trim();
-    const url = document.getElementById("file-url").value.trim();
-    if (!clientId || !name || !url) return;
-    STATE.files.unshift({ id: uid(), clientId, category: document.getElementById("file-category").value, name, url });
-    document.getElementById("file-name").value = "";
-    document.getElementById("file-url").value = "";
-    persist();
+    const category = document.getElementById("file-category").value.trim();
+    const fileInput = document.getElementById("file-input");
+    const file = fileInput.files[0];
+    const statusEl = document.getElementById("file-upload-status");
+    const uploadBtn = document.getElementById("file-upload-btn");
+    if (!clientId || !category || !file) return;
+
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = "Uploader…";
+    statusEl.textContent = "";
+    statusEl.style.color = "var(--faint)";
+    try{
+      const uploaded = await uploadFile(file);
+      STATE.files.unshift({ id: uid(), clientId, category, name: uploaded.name, url: uploaded.url, size: uploaded.size });
+      logActivity("Fil uploadet: "+uploaded.name);
+      document.getElementById("file-category").value = "";
+      fileInput.value = "";
+      persist();
+    }catch(err){
+      statusEl.textContent = err.message;
+      statusEl.style.color = "var(--rose)";
+    }finally{
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = "Upload";
+    }
   });
 
   function renderAll(){
